@@ -60,6 +60,31 @@ fn read_trace_file(file_path: &str) -> io::Result<Vec<String>> {
     buf.lines().collect()
 }
 
+// Function to get operation type and address from trace line
+fn parse_trace_line(line: &str) -> Option<(char, u64)> {
+    // Check if the first character of the line indicates an instruction load ('I').
+    // If so, we ignore these lines by returning None.
+    if line.starts_with('I') {
+        return None;
+    }
+
+    // Split the line into parts using whitespace as the delimiter.
+    // This separates the operation type ('L', 'S', 'M') from the memory address.
+    let parts: Vec<&str> = line.split_whitespace().collect();
+
+    // Extract the operation type, which is the first character of the first part.
+    let operation = parts[0].chars().next().unwrap();
+
+    // Separate address from size and other data which may appear
+    let addr_size: Vec<&str> = parts[1].split(',').collect();
+
+    // Extract the memory address from the second part.
+    let address = u64::from_str_radix(addr_size[0], 16).unwrap();
+
+    // Return the operation and address
+    Some((operation, address))
+}
+
 pub fn main() {
 
     // Collect command line arguments
@@ -72,17 +97,24 @@ pub fn main() {
 
     println!("s: {}, E: {}, b: {}, tracefile: {}", s, e, b, tracefile);
 
-    // Call `read_trace_file` with the path to our sample file.
-    match read_trace_file(tracefile) {
-        Ok(lines) => {
-            // If successful, iterate over the lines and print each one.
-            for line in lines {
-                println!("{}", line);
-            }
-        },
+    // Use the `read_trace_file` function to read the trace file
+    let lines = match read_trace_file(tracefile) {
+        Ok(lines) => lines,
         Err(e) => {
-            // If there's an error, print it out.
-            println!("Error reading file: {}", e);
+            eprintln!("Failed to read trace file: {}", e);
+            return;
+        }
+    };
+
+    // Process and parse each line from the trace file
+    for (index, line) in lines.iter().enumerate() {
+        let parse_result = parse_trace_line(line);
+
+        // Print the line and its parse result for verification
+        println!("Line {}: {}", index + 1, line);
+        match parse_result {
+            Some((operation, address)) => println!("  Parsed: Operation '{}', Address '{:X}'", operation, address),
+            None => println!("  Parsed: Ignored or Invalid Format"),
         }
     }
 
