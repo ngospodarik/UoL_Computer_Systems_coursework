@@ -1,7 +1,7 @@
-use std::env;
-use std::io::{BufReader, BufRead};
+use std::{env, io};
+use std::io::{BufRead};
 use std::fs::File;
-use std::error;
+use std::path::Path;
 
 // Define the CacheLine struct. Each CacheLine represents a single cache line.
 struct CacheLine {
@@ -48,21 +48,16 @@ impl Cache {
     }
 }
 
-fn read_trace_file(filepath: &str) -> Result<(), Box<dyn error::Error>> {
-    let file = File::open(filepath)?;
-    let reader = BufReader::new(file);
+// Function to read the trace file and return lines as a vector of strings.
+fn read_trace_file(file_path: &str) -> io::Result<Vec<String>> {
+    // Open the file at the given path.
+    let file = File::open(Path::new(file_path))?;
 
-    for line_result in reader.lines() {
-        let line = line_result?;
+    // Create a buffered reader for efficiently reading lines.
+    let buf = io::BufReader::new(file);
 
-        if line.starts_with(" L") | line.starts_with(" S") | line.starts_with(" M") {
-
-            println!("Processing {}", line)
-
-        }
-    }
-
-    Ok(())
+    // Collect lines into a vector
+    buf.lines().collect()
 }
 
 pub fn main() {
@@ -77,7 +72,19 @@ pub fn main() {
 
     println!("s: {}, E: {}, b: {}, tracefile: {}", s, e, b, tracefile);
 
-    let _ = read_trace_file(tracefile);
+    // Call `read_trace_file` with the path to our sample file.
+    match read_trace_file(tracefile) {
+        Ok(lines) => {
+            // If successful, iterate over the lines and print each one.
+            for line in lines {
+                println!("{}", line);
+            }
+        },
+        Err(e) => {
+            // If there's an error, print it out.
+            println!("Error reading file: {}", e);
+        }
+    }
 
     // initialize a new cache to see it's working
     let cache = Cache::new(*s, *e, *b);
