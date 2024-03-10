@@ -140,15 +140,48 @@ fn calculate_index_and_tag(address: u64, s: usize, b: usize) -> (usize, u64) {
     (set_index as usize, tag)
 }
 
+fn hits_misses_evictions_calc(cache: &mut Cache, lines: Vec<String>, s: usize, b: usize) {
+    let mut current_time = 0_u64;
+
+    for line in lines {
+        if let Some((operation, address)) = parse_trace_line(&line) {
+            let (set_index, tag) = calculate_index_and_tag(address, s, b);
+            let set = &mut cache.sets[set_index];
+
+            // Perform the access and update cache metrics based on the result.
+            let (hit, eviction) = set.access(tag, &mut current_time);
+
+            // Update cache statistics based on access result.
+            if hit {
+                cache.hits += 1;
+            } else {
+                cache.misses += 1;
+                if eviction {
+                    cache.evictions += 1;
+                }
+            }
+
+            // For 'M' operations, which are a load followed by a store, simulate a hit for the store operation.
+            if operation == 'M' {
+                cache.hits += 1; // Store hit
+            }
+        }
+
+        println!("Line {}", line);
+        println!("Hits: {}, Misses: {}, Evictions: {}", cache.hits, cache.misses, cache.evictions);
+    }
+}
+
+
 pub fn main() {
 
     // Collect command line arguments
     let args: Vec<String> = env::args().collect();
 
-    let s = &args[1].parse().unwrap();
-    let e = &args[2].parse().unwrap();
-    let b = &args[2].parse().unwrap();
-    let tracefile = &args[4];
+    let s = 4; // &args[1].parse().unwrap();
+    let e = 1; // &args[2].parse().unwrap();
+    let b = 4; // &args[2].parse().unwrap();
+    let tracefile = "ibm.trace"; //&args[4];
 
     println!("s: {}, E: {}, b: {}, tracefile: {}", s, e, b, tracefile);
 
@@ -161,30 +194,13 @@ pub fn main() {
         }
     };
 
-    // Process and parse each line from the trace file
-    for (index, line) in lines.iter().enumerate() {
-        let parse_result = parse_trace_line(line);
-
-        // Print the line and its parse result for verification
-        println!("Line {}: {}", index + 1, line);
-        match parse_result {
-            Some((operation, address)) => {
-                println!("  Parsed: Operation '{}', Address '{:X}'", operation, address);
-
-                // Once we have the address, calculate the set index and tag
-                let (set_index, tag) = calculate_index_and_tag(address, *s, *b);
-
-                // Print the calculated set index and tag for further verification
-                println!("    Calculated Set Index: {}, Tag: '{:X}'", set_index, tag);
-            },
-            None => println!("  Parsed: Ignored or Invalid Format"),
-        }
-    }
-
     // initialize a new cache to see it's working
-    let cache = Cache::new(*s, *e, *b);
+    let mut cache = Cache::new(s, e, b);
 
-    // For testing, let's just print the number of sets to verify our cache is initialized correctly.
-    println!("Initialized cache with {} sets.", cache.sets.len());
+    // Process the trace
+    hits_misses_evictions_calc(&mut cache, lines, s, b);
+
+    // Print cache statistics for verification
+    println!("Hits: {}, Misses: {}, Evictions: {}", cache.hits, cache.misses, cache.evictions);
 
 }
