@@ -23,6 +23,38 @@ struct CacheSet {
     lines: Vec<CacheLine>, // A vector of CacheLine, represents all lines within a set.
 }
 
+impl CacheSet {
+    // Method to access a cache set with a given tag.
+    // It returns a tuple indicating whether the access was a hit and if an eviction occurred.
+    fn access(&mut self, tag: u64, current_time: &mut u64) -> (bool, bool) {
+        // First, try to find a line that results in a hit.
+        if let Some(line) = self.lines.iter_mut().find(|line| line.is_hit(tag)) {
+            // If a hit is found, update the last_used to the current time and return (hit, no eviction).
+            line.last_used = *current_time;
+            return (true, false);
+        }
+
+        // No hit found; this is a miss. Increment current time for LRU logic.
+        *current_time += 1;
+
+        // Find the least recently used line for potential eviction.
+        if let Some(least_used_line) = self.lines.iter_mut().min_by_key(|line| line.last_used) {
+            // Check if we need to evict a line (if all lines are valid).
+            let eviction = least_used_line.valid;
+            // Update the least recently used line with the new tag and current time.
+            least_used_line.valid = true;
+            least_used_line.tag = tag;
+            least_used_line.last_used = *current_time;
+
+            // Return (miss, eviction status).
+            return (false, eviction);
+        }
+
+        // Default return should never be reached if cache set is initialized correctly.
+        unreachable!("Cache set must have at least one line");
+    }
+}
+
 // Define the Cache struct with its properties.
 struct Cache {
     sets: Vec<CacheSet>, // A vector of CacheSet, represents all the sets in the cache.
