@@ -85,6 +85,21 @@ fn parse_trace_line(line: &str) -> Option<(char, u64)> {
     Some((operation, address))
 }
 
+// Function to calculate the set index and tag from an address
+fn calculate_index_and_tag(address: u64, s: usize, b: usize) -> (usize, u64) {
+    // Shift the address right by 'b' bits to discard the block offset bits,
+    // then mask it with (2^s - 1) to keep only the 's' bits used for the set index.
+    let set_index = (address >> b) & ((1 << s) - 1);
+
+    // Shift the address right by 's+b' bits to discard both the set index and block offset bits,
+    // leaving only the tag bits.
+    let tag = address >> (s + b);
+
+    // Return the set index and tag as a tuple. The set index is cast to usize for indexing purposes,
+    // and the tag is kept as u64, its original type.
+    (set_index as usize, tag)
+}
+
 pub fn main() {
 
     // Collect command line arguments
@@ -113,7 +128,15 @@ pub fn main() {
         // Print the line and its parse result for verification
         println!("Line {}: {}", index + 1, line);
         match parse_result {
-            Some((operation, address)) => println!("  Parsed: Operation '{}', Address '{:X}'", operation, address),
+            Some((operation, address)) => {
+                println!("  Parsed: Operation '{}', Address '{:X}'", operation, address);
+
+                // Once we have the address, calculate the set index and tag
+                let (set_index, tag) = calculate_index_and_tag(address, *s, *b);
+
+                // Print the calculated set index and tag for further verification
+                println!("    Calculated Set Index: {}, Tag: '{:X}'", set_index, tag);
+            },
             None => println!("  Parsed: Ignored or Invalid Format"),
         }
     }
