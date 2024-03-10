@@ -10,6 +10,14 @@ struct CacheLine {
     last_used: u64, // Used for implementing LRU; higher number means more recently used.
 }
 
+impl CacheLine {
+    // Method to check if a given tag matches the tag of this cache line
+    // and if this cache line is valid (in use).
+    fn is_hit(&self, tag: u64) -> bool {
+        self.valid && self.tag == tag
+    }
+}
+
 // Define the CacheSet struct. Each CacheSet contains multiple CacheLines.
 struct CacheSet {
     lines: Vec<CacheLine>, // A vector of CacheLine, represents all lines within a set.
