@@ -86,6 +86,10 @@ impl Cache {
             evictions: 0,
         }
     }
+    // Method to report the simulation results
+    fn report_simulation_results(&self) {
+        println!("hits:{} misses:{} evictions:{}", self.hits, self.misses, self.evictions);
+    }
 }
 
 // Function to read the trace file and return lines as a vector of strings.
@@ -167,11 +171,10 @@ fn hits_misses_evictions_calc(cache: &mut Cache, lines: Vec<String>, s: usize, b
             }
         }
 
-        println!("Line {}", line);
-        println!("Hits: {}, Misses: {}, Evictions: {}", cache.hits, cache.misses, cache.evictions);
+        //println!("Line {}", line);
+        //println!("Hits: {}, Misses: {}, Evictions: {}", cache.hits, cache.misses, cache.evictions);
     }
 }
-
 
 pub fn main() {
 
@@ -183,7 +186,7 @@ pub fn main() {
     let b = 4; // &args[2].parse().unwrap();
     let tracefile = "ibm.trace"; //&args[4];
 
-    println!("s: {}, E: {}, b: {}, tracefile: {}", s, e, b, tracefile);
+    //println!("s: {}, E: {}, b: {}, tracefile: {}", s, e, b, tracefile);
 
     // Use the `read_trace_file` function to read the trace file
     let lines = match read_trace_file(tracefile) {
@@ -201,6 +204,6 @@ pub fn main() {
     hits_misses_evictions_calc(&mut cache, lines, s, b);
 
     // Print cache statistics for verification
-    println!("Hits: {}, Misses: {}, Evictions: {}", cache.hits, cache.misses, cache.evictions);
+    cache.report_simulation_results();
 
 }
