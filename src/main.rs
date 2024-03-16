@@ -65,7 +65,7 @@ struct Cache {
 
 impl Cache {
     // Define a method to create a new Cache instance.
-    fn new(s: usize, e: usize, b: usize) -> Cache {
+    fn new(s: usize, e: usize) -> Cache {
         let num_sets = 2_usize.pow(s as u32); // Calculate the number of sets (S=2^s).
         // Create all the sets for the cache.
         let sets = (0..num_sets).map(|_| {
@@ -195,7 +195,7 @@ pub fn main() {
     };
 
     // initialize a new cache to see it's working
-    let mut cache = Cache::new(s, e, b);
+    let mut cache = Cache::new(s, e);
 
     // Process the trace
     hits_misses_evictions_calc(&mut cache, lines, s, b);
