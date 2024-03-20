@@ -181,12 +181,36 @@ pub fn main() {
     // Collect command line arguments
     let args: Vec<String> = env::args().collect();
 
-    let s = 4; // &args[1].parse().unwrap();
-    let e = 1; // &args[2].parse().unwrap();
-    let b = 4; // &args[2].parse().unwrap();
-    let tracefile = "ibm.trace"; //&args[4];
+    if args.len() != 5 {
+        eprintln!("Usage: <s> <E> <b> <trace_file>");
+        std::process::exit(1);
+    }
 
-    //println!("s: {}, E: {}, b: {}, tracefile: {}", s, e, b, tracefile);
+    let s: usize = match args[1].parse() {
+        Ok(num) if num > 0 => num,
+        _ => {
+            eprintln!("Error: 's' must be an integer greater than 0");
+            std::process::exit(1);
+        },
+    };
+
+    let e: usize = match args[2].parse() {
+        Ok(num) if num > 0 => num,
+        _ => {
+            eprintln!("Error: 'E' must be an integer greater than 0");
+            std::process::exit(1);
+        },
+    };
+
+    let b: usize = match args[3].parse() {
+        Ok(num) if num > 0 => num,
+        _ => {
+            eprintln!("Error: 'b' must be an integer greater than 0");
+            std::process::exit(1);
+        },
+    };
+
+    let tracefile = &args[4];
 
     // Use the `read_trace_file` function to read the trace file
     let lines = match read_trace_file(tracefile) {
